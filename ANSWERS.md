@@ -100,3 +100,88 @@ A thin task layer within Celery. When a company updates an application status, t
 **Analytics Dashboard**
 
 Powered entirely by scheduled Celery Beat tasks that run at off-peak hours. Raw data from the applications and internships tables is aggregated into a lightweight snapshots table — application counts per internship, acceptance rates, skill demand trends. The dashboard reads only from this pre-computed table, never from the raw data at query time. This means dashboard performance is constant regardless of how many records accumulate in the core tables.
+
+
+
+# Production-Ready Backend System Design (1000 RPS)
+
+## Requirements
+
+### Functional Requirements
+- Handle **1000 Requests Per Second**
+- **Real-time Analytics**
+- **Email Notifications**
+- **Audit Logs**
+- **Fast Search**
+- **Zero Duplicate Applications**
+
+### Non-Functional Requirements
+- High Availability
+- Fault Tolerance
+- Horizontal Scalability
+- Low Latency
+- Observability
+- Security
+- Data Consistency
+
+---
+
+# High Level Architecture
+
+```text
+                           ┌─────────────────┐
+                           │      Client     │
+                           │ (Web/Mobile)    │
+                           └────────┬────────┘
+                                    │
+                                    ▼
+                     ┌─────────────────────────┐
+                     │     CDN / WAF(Optional) │
+                     └────────┬────────────────┘
+                              │
+                              ▼
+                     ┌───────────────────┐
+                     │   Load Balancer   │
+                     │ (Nginx / HAProxy) │
+                     └────────┬──────────┘
+                              │
+              ┌───────────────┼────────────────┐
+              │               │                │
+              ▼               ▼                ▼
+      ┌────────────┐ ┌────────────┐ ┌────────────┐
+      │ App Server │ │ App Server │ │ App Server │
+      │  Django /  │ │  Django /  │ │  Django /  │
+      │  FastAPI   │ │  FastAPI   │ │  FastAPI   │
+      └─────┬──────┘ └─────┬──────┘ └─────┬──────┘
+            │              │              │
+            └──────────────┼──────────────┘
+                           │
+        ┌──────────────────┼───────────────────┐
+        │                  │                   │
+        ▼                  ▼                   ▼
+ ┌────────────┐    ┌──────────────┐    ┌──────────────┐
+ │    Redis   │    │ Kafka/Rabbit │    │ Elasticsearch│
+ │ Cache/RL   │    │ Event Queue  │    │ Fast Search  │
+ └─────┬──────┘    └──────┬───────┘    └──────────────┘
+       │                  │
+       │                  ├────────────────────────────┐
+       │                  │                            │
+       ▼                  ▼                            ▼
+┌──────────────┐  ┌──────────────┐         ┌────────────────┐
+│ PostgreSQL   │  │ Email Worker │         │ Analytics      │
+│ Primary DB   │  │ Celery       │         │ Processing     │
+└──────┬───────┘  └──────────────┘         └────────────────┘
+       │
+       ▼
+┌──────────────┐
+│ Read Replica │
+│ Reporting    │
+└──────────────┘
+
+
+Monitoring:
+Prometheus + Grafana
+Logging:
+ELK Stack (Elastic + Logstash + Kibana)
+```
+---
