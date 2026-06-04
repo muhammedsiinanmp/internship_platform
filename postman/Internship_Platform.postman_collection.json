@@ -1,0 +1,521 @@
+{
+  "info": {
+    "name": "Internship Platform API",
+    "description": "Complete API collection for the IQRAA MARK PVT LTD Internship Management Platform.\n\n## Automation Setup\n\n1. Import this collection into Postman\n2. Set `base_url` in collection variables (default: `http://localhost:8000`)\n3. Run the requests in order:\n   - **Auth** folder first → register/login to get tokens (auto-saved to collection vars)\n   - Then **Internships** → create internships\n   - Then **Applications** → apply to internships\n\nAll authenticated endpoints automatically attach the Bearer token via pre-request script.\nTokens are auto-extracted from login/register responses.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "opencode"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "internship_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "application_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-attach bearer token from collection variable",
+          "if (pm.collectionVariables.get('access_token')) {",
+          "  pm.request.headers.add({",
+          "    key: 'Authorization',",
+          "    value: 'Bearer ' + pm.collectionVariables.get('access_token')",
+          "  });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints — register, login, logout, profile, change password.\n\n**Flow:** Register two users (student + company), then login to get tokens. Tokens are auto-saved to collection variables.",
+      "item": [
+        {
+          "name": "Register Student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var json = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token', json.data.tokens.access);",
+                  "  pm.collectionVariables.set('refresh_token', json.data.tokens.refresh);",
+                  "  pm.collectionVariables.set('student_access_token', json.data.tokens.access);",
+                  "  pm.collectionVariables.set('student_refresh_token', json.data.tokens.refresh);",
+                  "  pm.collectionVariables.set('student_id', json.data.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"student@test.com\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"role\": \"student\",\n  \"password\": \"StrongPass123!\",\n  \"password_confirm\": \"StrongPass123!\",\n  \"university\": \"MIT\",\n  \"graduation_year\": 2027\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "description": "Register a new student account. Tokens are auto-saved to collection variables."
+          }
+        },
+        {
+          "name": "Register Company",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var json = pm.response.json();",
+                  "  pm.collectionVariables.set('company_access_token', json.data.tokens.access);",
+                  "  pm.collectionVariables.set('company_refresh_token', json.data.tokens.refresh);",
+                  "  pm.collectionVariables.set('company_id', json.data.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"company@test.com\",\n  \"first_name\": \"IQRAA\",\n  \"last_name\": \"Mark\",\n  \"role\": \"company\",\n  \"password\": \"StrongPass123!\",\n  \"password_confirm\": \"StrongPass123!\",\n  \"company_name\": \"IQRAA MARK PVT LTD\",\n  \"company_website\": \"https://iqraamark.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "description": "Register a new company account. Token is saved to collection variables."
+          }
+        },
+        {
+          "name": "Login as Student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var json = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token', json.data.access);",
+                  "  pm.collectionVariables.set('refresh_token', json.data.refresh);",
+                  "  pm.collectionVariables.set('student_access_token', json.data.access);",
+                  "  pm.collectionVariables.set('student_refresh_token', json.data.refresh);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"student@test.com\",\n  \"password\": \"StrongPass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Login as student. Sets `access_token` for subsequent requests."
+          }
+        },
+        {
+          "name": "Login as Company",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var json = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token', json.data.access);",
+                  "  pm.collectionVariables.set('refresh_token', json.data.refresh);",
+                  "  pm.collectionVariables.set('company_access_token', json.data.access);",
+                  "  pm.collectionVariables.set('company_refresh_token', json.data.refresh);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"company@test.com\",\n  \"password\": \"StrongPass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Login as company. Sets `access_token` for subsequent requests."
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/token/refresh/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "token", "refresh"]
+            },
+            "description": "Get a new access token using the refresh token."
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/profile/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "profile"]
+            },
+            "description": "Get the authenticated user's profile."
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Updated\",\n  \"university\": \"Stanford\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/profile/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "profile"]
+            },
+            "description": "Update the authenticated user's profile (partial update)."
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"old_password\": \"StrongPass123!\",\n  \"new_password\": \"NewStrongPass456!\",\n  \"new_password_confirm\": \"NewStrongPass456!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/change-password/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "change-password"]
+            },
+            "description": "Change the authenticated user's password."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/logout/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            },
+            "description": "Blacklist the refresh token to log out."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Internships",
+      "description": "Internship CRUD endpoints.\n\n**Flow:** First run \"Login as Company\" to set the company token, then create an internship. The created internship ID is auto-saved to `internship_id`.",
+      "item": [
+        {
+          "name": "Create Internship",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var json = pm.response.json();",
+                  "  pm.collectionVariables.set('internship_id', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{company_access_token}}", "disabled": true }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Backend Developer Intern\",\n  \"description\": \"Build and maintain Django REST APIs for our internship platform. You will work closely with the senior engineering team.\",\n  \"requirements\": \"Python, Django, REST APIs, PostgreSQL, Git\",\n  \"location\": \"Remote\",\n  \"internship_type\": \"remote\",\n  \"status\": \"open\",\n  \"stipend_per_month\": \"15000.00\",\n  \"duration_months\": 3,\n  \"openings\": 2,\n  \"application_deadline\": \"2026-08-01\",\n  \"skills_required\": [\"Python\", \"Django\", \"REST\", \"PostgreSQL\", \"Git\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/internships/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "internships"]
+            },
+            "description": "Create a new internship (company only). The internship ID is auto-saved to `internship_id`."
+          }
+        },
+        {
+          "name": "List Internships",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/internships/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "internships"],
+              "query": [
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "internship_type", "value": "", "disabled": true },
+                { "key": "stipend_min", "value": "", "disabled": true },
+                { "key": "stipend_max", "value": "", "disabled": true },
+                { "key": "location", "value": "", "disabled": true },
+                { "key": "ordering", "value": "-created_at", "disabled": true },
+                { "key": "page", "value": "1", "disabled": true },
+                { "key": "page_size", "value": "20", "disabled": true }
+              ]
+            },
+            "description": "List all open internships (students) or own internships (companies). Supports filtering, search, ordering, and pagination."
+          }
+        },
+        {
+          "name": "Get Internship Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/internships/{{internship_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "internships", "{{internship_id}}"]
+            },
+            "description": "Get a single internship by ID."
+          }
+        },
+        {
+          "name": "Update Internship",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Senior Backend Developer Intern\",\n  \"stipend_per_month\": \"20000.00\",\n  \"openings\": 3\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/internships/{{internship_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "internships", "{{internship_id}}"]
+            },
+            "description": "Update an internship (company owner only). Partial update supported."
+          }
+        },
+        {
+          "name": "Delete Internship",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/internships/{{internship_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "internships", "{{internship_id}}"]
+            },
+            "description": "Delete an internship (company owner only)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Applications",
+      "description": "Application endpoints — apply, list, detail, update status.\n\n**Flow:** First run \"Login as Student\" to set the student token, then apply to an internship. The created application ID is auto-saved to `application_id`.",
+      "item": [
+        {
+          "name": "Apply to Internship",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var json = pm.response.json();",
+                  "  pm.collectionVariables.set('application_id', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{student_access_token}}", "disabled": true }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"internship\": \"{{internship_id}}\",\n  \"cover_letter\": \"I am passionate about backend development and have experience building REST APIs with Django. I am excited about the opportunity to contribute to IQRAA MARK's internship platform.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/applications/apply/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "applications", "apply"]
+            },
+            "description": "Apply to an internship (student only). The application ID is auto-saved to `application_id`."
+          }
+        },
+        {
+          "name": "List Applications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/applications/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "applications"],
+              "query": [
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "ordering", "value": "-applied_at", "disabled": true },
+                { "key": "internship_id", "value": "", "disabled": true },
+                { "key": "page", "value": "1", "disabled": true },
+                { "key": "page_size", "value": "20", "disabled": true }
+              ]
+            },
+            "description": "List applications. Students see their own; companies see applications for their internships."
+          }
+        },
+        {
+          "name": "Get Application Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/applications/{{application_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "applications", "{{application_id}}"]
+            },
+            "description": "Get a single application by ID."
+          }
+        },
+        {
+          "name": "Update Application Status",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Use company token for this request",
+                  "var companyToken = pm.collectionVariables.get('company_access_token');",
+                  "if (companyToken) {",
+                  "  pm.request.headers.add({",
+                  "    key: 'Authorization',",
+                  "    value: 'Bearer ' + companyToken",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"reviewed\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/applications/{{application_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "applications", "{{application_id}}"]
+            },
+            "description": "Update application status (company only). Allowed statuses: `reviewed`, `shortlisted`, `rejected`, `accepted`."
+          }
+        }
+      ]
+    }
+  ]
+}

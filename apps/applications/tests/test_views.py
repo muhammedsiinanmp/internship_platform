@@ -45,21 +45,24 @@ def internship(company_user):
 
 
 @pytest.fixture
-def student_client(api_client, student_user):
-    api_client.force_authenticate(user=student_user)
-    return api_client
+def student_client(student_user):
+    client = APIClient()
+    client.force_authenticate(user=student_user)
+    return client
 
 
 @pytest.fixture
-def student2_client(api_client, student_user2):
-    api_client.force_authenticate(user=student_user2)
-    return api_client
+def student2_client(student_user2):
+    client = APIClient()
+    client.force_authenticate(user=student_user2)
+    return client
 
 
 @pytest.fixture
-def company_client(api_client, company_user):
-    api_client.force_authenticate(user=company_user)
-    return api_client
+def company_client(company_user):
+    client = APIClient()
+    client.force_authenticate(user=company_user)
+    return client
 
 
 @pytest.mark.django_db
