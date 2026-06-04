@@ -2,7 +2,7 @@
 Django REST Framework backend — IQRAA MARK PVT LTD Technical Assessment.
 
 ## Stack
-- Python 3.x, Django 4.2, DRF, SimpleJWT
+-Python 3.x, Django 5.0.6, DRF 3.15.2, SimpleJWT 5.3.1
 
 ## Setup
 ```bash

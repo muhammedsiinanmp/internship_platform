@@ -47,7 +47,7 @@ class RegisterView(SuccessResponseMixin, generics.CreateAPIView):
 
 
 @extend_schema(tags=["Auth"])
-class LoginView(CustomTokenObtainPairSerializer, TokenObtainPairView):
+class LoginView(TokenObtainPairView):
     """Login with email & password. Returns JWT tokens + user profile."""
 
     serializer_class = CustomTokenObtainPairSerializer

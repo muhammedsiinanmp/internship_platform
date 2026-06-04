@@ -1,5 +1,4 @@
 from .base import *  # noqa
-import sentry_sdk
 from decouple import config
 
 DEBUG = False
@@ -15,9 +14,3 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = "DENY"
-
-sentry_sdk.init(
-    dsn=config("SENTRY_DSN", default=""),
-    traces_sample_rate=0.1,
-    profiles_sample_rate=0.1,
-)

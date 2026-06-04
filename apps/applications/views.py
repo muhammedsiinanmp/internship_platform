@@ -2,6 +2,7 @@ import logging
 from rest_framework import generics, permissions, status, filters
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
+from django_filters.rest_framework import DjangoFilterBackend
 
 from core.mixins import SuccessResponseMixin
 from .models import Application
@@ -61,7 +62,7 @@ class ApplicationListView(SuccessResponseMixin, generics.ListAPIView):
     serializer_class = ApplicationListSerializer
     permission_classes = [permissions.IsAuthenticated]
     search_fields = ["internship__title", "student__email", "student__first_name"]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     ordering_fields = ["applied_at", "status"]
     ordering = ["-applied_at"]
 
